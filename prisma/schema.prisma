@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  firsName String 
+  lastName String
+  password String
+  email String @unique
+  phoneNumber Int
+  address String
+  createAt DateTime @default(now())
+  updateAt DateTime 
+  orders Order[]
+
+}
+
+model Order {
+  id Int @id @default(autoincrement())
+  createAt DateTime @default(now())
+  updateAt DateTime 
+  paymentsubmission String?
+  orderstatus order_status
+  userId Int
+  user User @relation(fields: [userId], references: [id])
+  orderItems OrderItem[]
+}
+
+model OrderItem {
+  id Int @id @default(autoincrement())
+  createAt DateTime @default(now())
+  updateAt DateTime 
+  orderId Int
+  order Order @relation(fields: [orderId], references: [id])
+  productId Int
+  product Product @relation(fields: [productId], references: [id])
+}
+
+
+model Category {
+  id Int @id @default(autoincrement())
+  productCategory String
+  createAt DateTime @default(now())
+  updateAt DateTime
+  products Product[] 
+}
+
+model Product {
+  id Int @id @default(autoincrement())
+  productName String
+  price Int
+  createAt DateTime @default(now())
+  updateAt DateTime
+  categoryId Int
+  category Category @relation(fields: [categoryId], references: [id])
+  orderItems OrderItem[]
+  cart Cart[]
+}
+
+model Cart {
+  id Int @id @default(autoincrement())
+  productName String
+  price Int
+  amount Int
+  createAt DateTime @default(now())
+  updateAt DateTime
+  productId Int
+  product Product @relation(fields: [productId], references: [id])
+}
+
+
+
+enum order_status {
+  INCART
+  PENDING
+  ACCEPTED
+}

@@ -12,14 +12,14 @@ datasource db {
 
 model User {
   id Int @id @default(autoincrement())
-  firsName String 
+  firstName String 
   lastName String
   password String
   email String @unique
-  phoneNumber Int
+  phoneNumber String
   address String
   createAt DateTime @default(now())
-  updateAt DateTime 
+  updateAt DateTime @updatedAt
   orders Order[]
 
 }
@@ -27,7 +27,7 @@ model User {
 model Order {
   id Int @id @default(autoincrement())
   createAt DateTime @default(now())
-  updateAt DateTime 
+  updateAt DateTime @updatedAt 
   paymentsubmission String?
   orderstatus order_status
   userId Int
@@ -38,7 +38,7 @@ model Order {
 model OrderItem {
   id Int @id @default(autoincrement())
   createAt DateTime @default(now())
-  updateAt DateTime 
+  updateAt DateTime @updatedAt 
   orderId Int
   order Order @relation(fields: [orderId], references: [id])
   productId Int
@@ -50,16 +50,16 @@ model Category {
   id Int @id @default(autoincrement())
   productCategory String
   createAt DateTime @default(now())
-  updateAt DateTime
+  updateAt DateTime @updatedAt
   products Product[] 
 }
 
 model Product {
   id Int @id @default(autoincrement())
   productName String
-  price Int
+  price Decimal @db.Decimal(10,2)
   createAt DateTime @default(now())
-  updateAt DateTime
+  updateAt DateTime @updatedAt
   categoryId Int
   category Category @relation(fields: [categoryId], references: [id])
   orderItems OrderItem[]
@@ -69,10 +69,10 @@ model Product {
 model Cart {
   id Int @id @default(autoincrement())
   productName String
-  price Int
+  price Decimal @db.Decimal(10,2)
   amount Int
   createAt DateTime @default(now())
-  updateAt DateTime
+  updateAt DateTime @updatedAt
   productId Int
   product Product @relation(fields: [productId], references: [id])
 }

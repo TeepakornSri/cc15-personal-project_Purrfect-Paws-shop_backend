@@ -19,13 +19,13 @@ exports.register = async (req, res, next) => {
     const payload = { userId: user.id };
     const accessToken = JWT.sign(
       payload,
-      process.env.JTW_SECRET_KEY || "qwertyuasdfghzxcvbn",
+      process.env.JWT_SECRET_KEY || "qwertyuasdfghzxcvbn",
       {
         expiresIn: process.env.JWT_EXPIRE,
       }
     );
     delete user.password;
-    res.status(201).json({ accessToken });
+    res.status(201).json({ accessToken, user });
   } catch (err) {
     next(err);
   }
@@ -62,4 +62,8 @@ exports.login = async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+};
+
+exports.getMe = (req, res, next) => {
+  res.status(200).json({ user: req.user });
 };

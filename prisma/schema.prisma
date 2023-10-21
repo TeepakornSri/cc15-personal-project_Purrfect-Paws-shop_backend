@@ -12,6 +12,7 @@ datasource db {
 
 model User {
   id Int @id @default(autoincrement())
+  role Role @default(User)
   firstName String 
   lastName String
   password String
@@ -21,6 +22,7 @@ model User {
   createAt DateTime @default(now())
   updateAt DateTime @updatedAt
   orders Order[]
+  cart Cart[]
 
 }
 
@@ -37,6 +39,8 @@ model Order {
 
 model OrderItem {
   id Int @id @default(autoincrement())
+  amount Int
+  price Decimal @db.Decimal(10,2)
   createAt DateTime @default(now())
   updateAt DateTime @updatedAt 
   orderId Int
@@ -57,6 +61,8 @@ model Category {
 model Product {
   id Int @id @default(autoincrement())
   productName String
+  productImg String?
+  productdescription String?
   price Decimal @db.Decimal(10,2)
   createAt DateTime @default(now())
   updateAt DateTime @updatedAt
@@ -68,13 +74,13 @@ model Product {
 
 model Cart {
   id Int @id @default(autoincrement())
-  productName String
-  price Decimal @db.Decimal(10,2)
   amount Int
   createAt DateTime @default(now())
   updateAt DateTime @updatedAt
   productId Int
   product Product @relation(fields: [productId], references: [id])
+  userId Int
+  user User @relation(fields: [userId], references: [id])
 }
 
 
@@ -83,4 +89,9 @@ enum order_status {
   INCART
   PENDING
   ACCEPTED
+}
+
+enum Role {
+  ADMIN
+  User
 }

@@ -6,5 +6,10 @@ const rounter = express.Router();
 rounter.post("/register", authController.register);
 rounter.post("/login", authController.login);
 rounter.get("/me", authenticateMiddleware, authController.getMe);
+rounter.patch(
+  "/updateprofile",
+  authenticateMiddleware,
+  authController.updateprofile
+);
 
 module.exports = rounter;

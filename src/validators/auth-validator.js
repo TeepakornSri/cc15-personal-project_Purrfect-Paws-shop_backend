@@ -2,6 +2,7 @@ const Joi = require("joi");
 
 const registerSchema = Joi.object({
   firstName: Joi.string().trim().required(),
+  role: Joi.string().trim(),
   lastName: Joi.string().trim().required(),
   address: Joi.string().trim().required(),
   email: Joi.string().email().required(),
@@ -24,3 +25,12 @@ const loginSchema = Joi.object({
 });
 
 exports.loginSchema = loginSchema;
+
+const updateprofileSchema = Joi.object({
+  firstName: Joi.string().trim(),
+  lastName: Joi.string().trim(),
+  address: Joi.string().trim(),
+  phoneNumber: Joi.string().pattern(/^[0-9]{10}$/),
+});
+
+exports.updateprofileSchema = updateprofileSchema;

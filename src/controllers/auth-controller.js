@@ -1,6 +1,10 @@
 const bcrypt = require("bcryptjs");
 const JWT = require("jsonwebtoken");
-const { registerSchema, loginSchema } = require("../validators/auth-validator");
+const {
+  registerSchema,
+  loginSchema,
+  updateprofileSchema,
+} = require("../validators/auth-validator");
 const prisma = require("../models/prisma");
 const createError = require("../utils/create-error");
 
@@ -12,7 +16,18 @@ exports.register = async (req, res, next) => {
       return next(error);
     }
 
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        email: value.email,
+      },
+    });
+
+    if (existingUser) {
+      return next(createError("Email already exists", 400));
+    }
+
     value.password = await bcrypt.hash(value.password, 12);
+
     const user = await prisma.user.create({
       data: value,
     });
@@ -66,4 +81,26 @@ exports.login = async (req, res, next) => {
 
 exports.getMe = (req, res, next) => {
   res.status(200).json({ user: req.user });
+};
+
+exports.updateprofile = async (req, res, next) => {
+  try {
+    const { value, error } = updateprofileSchema.validate(req.body);
+    if (error) {
+      return next(error);
+    }
+    let user = { user: req.user };
+    if (req.user) {
+      const user = await prisma.user.update({
+        data: value,
+
+        where: {
+          id: req.user.id,
+        },
+      });
+    }
+    res.status(201).json({ user });
+  } catch (err) {
+    next(err);
+  }
 };

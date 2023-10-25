@@ -34,3 +34,13 @@ const updateprofileSchema = Joi.object({
 });
 
 exports.updateprofileSchema = updateprofileSchema;
+
+const updateProductSchema = Joi.object({
+  productName: Joi.string().trim().required(),
+  productImg: Joi.string(),
+  productdescription: Joi.string(),
+  price: Joi.number().precision(2).required(),
+  categoryId: Joi.number().required(),
+});
+
+exports.updateProductSchema = updateProductSchema;

@@ -104,3 +104,22 @@ exports.updateprofile = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.GetAllUser = async (req, res, next) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        password: false,
+        email: true,
+        phoneNumber: true,
+        address: true,
+      },
+    });
+    res.status(200).json({ users });
+  } catch (err) {
+    next(err);
+  }
+};

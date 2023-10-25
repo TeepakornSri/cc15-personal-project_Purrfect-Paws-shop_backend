@@ -2,21 +2,25 @@ const error = require("../middlewares/error");
 const prisma = require("../models/prisma");
 const { upload } = require("../utils/cloudinary-service");
 const fs = require("fs/promises");
-const { checkProductId } = require("../validators/product-validate");
+const {
+  checkProductId,
+  updateProductSchema,
+} = require("../validators/product-validate");
 
 exports.CreateProduct = async (req, res, next) => {
   try {
-    if (!req.file) {
-      console.log(error);
-    }
-    product = req.body;
+    let product = req.body;
+
     if (req.file) {
       product.productImg = await upload(req.file.path);
     }
+
     product.categoryId = +product.categoryId;
+
     const Productcreated = await prisma.product.create({
       data: product,
     });
+
     res.status(200).json({ Productcreated });
   } catch (err) {
     next(err);
@@ -39,14 +43,30 @@ exports.createCategory = async (req, res, next) => {
   }
 };
 
+exports.getAllCategory = async (req, res, next) => {
+  try {
+    const categories = await prisma.category.findMany({
+      select: {
+        id: true,
+        productCategory: true,
+        createAt: true,
+        updateAt: true,
+      },
+    });
+    res.status(200).json({ categories });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.GetAllProduct = async (req, res, next) => {
   try {
     const prodcutIds = await prisma.product.findMany({
       select: {
         id: true,
         productdescription: true,
-        createAt: false,
-        updateAt: false,
+        createAt: true,
+        updateAt: true,
         productName: true,
         productImg: true,
         price: true,
@@ -109,6 +129,7 @@ exports.AddToCart = async (req, res, next) => {
     const existingCartItem = await prisma.cart.findFirst({
       where: {
         productId: value.productId,
+        userId: req.user.id,
       },
     });
     if (existingCartItem) {
@@ -196,7 +217,6 @@ exports.createOrder = async (req, res, next) => {
     const { allCartProduct } = req.body;
     const userId = req.user.id;
 
-    // Create an Order
     const createOrder = await prisma.order.create({
       data: {
         userId: userId,
@@ -204,7 +224,6 @@ exports.createOrder = async (req, res, next) => {
       },
     });
 
-    // Create OrderItems for each product in the cart using map
     const orderItems = await Promise.all(
       allCartProduct.map(async (cartProduct) => {
         const { productId, amount } = cartProduct;
@@ -218,16 +237,9 @@ exports.createOrder = async (req, res, next) => {
             orderId: createOrder.id,
           },
         });
-
-        return orderItem;
       })
     );
 
-    // Now, you have created Order and OrderItems for each product in the cart
-
-    // Delete the cart or perform any other necessary actions
-
-    // Respond with the created Order and OrderItems
     res.status(200).json({ createOrder, orderItems });
   } catch (err) {
     next(err);
@@ -257,10 +269,10 @@ exports.uploadPayment = async (req, res, next) => {
       await prisma.order.update({
         data: {
           paymentsubmission: url,
-          orderstatus: "PENDING", // หรือสถานะที่คุณต้องการ
+          orderstatus: "PENDING",
         },
         where: {
-          id: latestOrder.id, // ใช้ ID ของคำสั่งซื้อที่คุณดึงมา
+          id: latestOrder.id,
         },
       });
 
@@ -274,6 +286,209 @@ exports.uploadPayment = async (req, res, next) => {
     } else {
       res.status(404).json({ message: "No recent orders found" });
     }
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.updateproduct = async (req, res, next) => {
+  try {
+    const { productId } = req.params;
+    let product = req.body;
+    console.log(product);
+    if (req.file) {
+      product.productImg = await upload(req.file.path);
+    }
+    product.categoryId = +product.categoryId;
+
+    const updateProduct = await prisma.product.update({
+      data: product,
+      where: {
+        id: +productId,
+      },
+    });
+
+    res.status(201).json({ updateProduct });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteProduct = async (req, res, next) => {
+  try {
+    const { productId } = req.params;
+    const product = await prisma.product.findUnique({
+      where: {
+        id: +productId,
+      },
+    });
+
+    if (product) {
+      await prisma.cart.deleteMany({
+        where: {
+          productId: +productId,
+        },
+      });
+      await prisma.orderItem.deleteMany({
+        where: {
+          productId: +productId,
+        },
+      });
+      await prisma.product.delete({
+        where: {
+          id: +productId,
+        },
+      });
+
+      res.status(200).json({ message: "Deleted Product" });
+    } else {
+      res.status(404).json({ message: "Product not found" });
+    }
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.deleteCategory = async (req, res, next) => {
+  try {
+    const { categoryId } = req.params;
+    const category = await prisma.category.findUnique({
+      where: {
+        id: +categoryId,
+      },
+    });
+
+    if (category) {
+      await prisma.product.deleteMany({
+        where: {
+          categoryId: +categoryId,
+        },
+      });
+      await prisma.category.delete({
+        where: {
+          id: +categoryId,
+        },
+      });
+      res.status(200).json({ message: "Deleted Product" });
+    } else {
+      res.status(404).json({ message: "Product not found" });
+    }
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.GetAllOrder = async (req, res, next) => {
+  try {
+    const Orders = await prisma.order.findMany({
+      select: {
+        id: true,
+        createAt: true,
+        updateAt: true,
+        paymentsubmission: true,
+        orderstatus: true,
+        userId: true,
+      },
+      orderBy: {
+        orderstatus: "desc",
+      },
+    });
+    res.status(200).json({ Orders });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.GetOrder = async (req, res, next) => {
+  try {
+    const MyOrder = await prisma.order.findMany({
+      select: {
+        id: true,
+        createAt: true,
+        updateAt: false,
+        paymentsubmission: false,
+        orderstatus: true,
+        userId: true,
+      },
+      where: {
+        userId: req.user.id,
+      },
+    });
+    res.status(200).json({ MyOrder });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.approveOrder = async (req, res, next) => {
+  try {
+    const { OrderId } = req.params;
+    const order = await prisma.order.findUnique({
+      where: {
+        id: +OrderId,
+      },
+    });
+
+    if (order) {
+      await prisma.order.update({
+        where: {
+          id: +OrderId,
+        },
+        data: {
+          orderstatus: "ACCEPTED",
+        },
+      });
+      res.status(200).json({ message: "Updated Order :)" });
+    } else {
+      res.status(404).json({ message: "Order not found" });
+    }
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.cancelOrder = async (req, res, next) => {
+  try {
+    const { OrderId } = req.params;
+    const order = await prisma.order.findUnique({
+      where: {
+        id: +OrderId,
+      },
+    });
+    if (order) {
+      await prisma.orderItem.deleteMany({
+        where: {
+          orderId: +OrderId,
+        },
+      });
+      await prisma.order.delete({
+        where: {
+          id: +OrderId,
+        },
+      });
+      res.status(200).json({ message: "Cancel Order" });
+    } else {
+      res.status(404).json({ message: "Product not found" });
+    }
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getAllOrderItem = async (req, res, next) => {
+  try {
+    const orderitems = await prisma.orderItem.findMany({
+      select: {
+        id: true,
+        createAt: true,
+        updateAt: true,
+        amount: true,
+        price: true,
+        orderId: true,
+        productId: true,
+      },
+    });
+    res.status(200).json({ orderitems });
   } catch (err) {
     next(err);
   }

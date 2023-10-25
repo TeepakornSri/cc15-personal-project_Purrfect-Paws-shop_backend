@@ -11,5 +11,6 @@ rounter.patch(
   authenticateMiddleware,
   authController.updateprofile
 );
+rounter.get("/getallusers", authenticateMiddleware, authController.GetAllUser);
 
 module.exports = rounter;

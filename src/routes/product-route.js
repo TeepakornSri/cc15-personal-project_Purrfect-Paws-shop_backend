@@ -18,6 +18,17 @@ router.post(
   authenticateMiddleware,
   productController.createCategory
 );
+router.get(
+  "/allcategory",
+  authenticateMiddleware,
+  productController.getAllCategory
+);
+
+router.delete(
+  "/deletecategory/:categoryId",
+  authenticateMiddleware,
+  productController.deleteCategory
+);
 
 router.get("/showallproduct", productController.GetAllProduct);
 
@@ -32,11 +43,19 @@ router.get(
   authenticateMiddleware,
   productController.ShowProductInCart
 );
+router.get("/allorders", authenticateMiddleware, productController.GetAllOrder);
+router.get("/myorder", authenticateMiddleware, productController.GetOrder);
 
 router.post(
   "/addToCart/:productId",
   authenticateMiddleware,
   productController.AddToCart
+);
+
+router.get(
+  "/getAllOrderItem",
+  authenticateMiddleware,
+  productController.getAllOrderItem
 );
 
 router.get("/:productId", productController.getProductById);
@@ -64,6 +83,30 @@ router.patch(
   authenticateMiddleware,
   uploadMiddleware.single("paymentsubmission"),
   productController.uploadPayment
+);
+
+router.patch(
+  "/updateproduct/:productId",
+  authenticateMiddleware,
+  uploadMiddleware.single("productImg"),
+  productController.updateproduct
+);
+
+router.delete(
+  "/delete/:productId",
+  authenticateMiddleware,
+  productController.deleteProduct
+);
+router.patch(
+  "/updateorder/:OrderId",
+  authenticateMiddleware,
+  productController.approveOrder
+);
+
+router.delete(
+  "/cancelorder/:OrderId",
+  authenticateMiddleware,
+  productController.cancelOrder
 );
 
 module.exports = router;
